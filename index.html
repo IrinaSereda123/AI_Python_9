@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Работа с Ollama</title>
+  <style>
+      :root {
+          --ink:#16202e; --muted:#5d6978; --line:#d5dbe3; --bg:#f6f7f9;
+          --blue:#2c5f93; --sun:#f2c94c; --code:#eaeef3; --warn:#c0392b;
+          --soft:#eef2fa;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; scroll-padding-top: 1.5rem; }
+      body {
+          margin:0; background:var(--bg); color:var(--ink);
+          font:17px/1.6 "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      .wrap {
+          display:grid; grid-template-columns: 15rem minmax(0, 46rem);
+          gap:4rem; max-width:68rem; margin:0 auto; padding:3rem 1.5rem 5rem;
+      }
+      aside { position:sticky; top:3rem; align-self:start; }
+      aside .title { font-size:1.35rem; font-weight:700; line-height:1.25; margin:0 0 .4rem; }
+      aside .day { color:var(--muted); font-size:.95rem; margin:0 0 1.6rem; }
+      aside ol { list-style:none; margin:0; padding:0; border-left:2px solid var(--line); }
+      aside li a {
+          display:block; padding:.35rem 0 .35rem 1rem; margin-left:-2px;
+          border-left:2px solid transparent; color:var(--muted);
+          text-decoration:none; font-size:.98rem;
+      }
+      aside li a:hover { color:var(--ink); border-left-color:var(--blue); }
+      aside li a:focus-visible { outline:2px solid var(--blue); outline-offset:3px; }
+
+      h2 { font-size:1.45rem; line-height:1.25; margin:0 0 .6rem; }
+      h3 { font-size:1.15rem; margin:1.2rem 0 .5rem; color:var(--blue); }
+      section { padding:2.2rem 0; border-top:1px solid var(--line); position:relative; }
+      section:first-of-type { border-top:0; padding-top:0; }
+      .n { display:block; font-size:.95rem; color:var(--blue); font-weight:600; margin-bottom:.2rem; }
+      p { margin:.6rem 0; }
+      ul { padding-left:1.2rem; }
+      li { margin:.3rem 0; }
+      a { color:var(--blue); }
+      code {
+          font-family:Consolas, "Cascadia Mono", Menlo, monospace;
+          font-size:.88em; background:var(--code); padding:.08em .35em; border-radius:3px;
+      }
+      pre {
+          margin:.8rem 0 0; padding:1rem 1.2rem; background:var(--code);
+          border-left:4px solid var(--sun); overflow-x:auto;
+          font:15px/1.5 Consolas, "Cascadia Mono", Menlo, monospace;
+      }
+      pre code { background:none; padding:0; font-size:inherit; }
+
+      details { border-top:1px solid var(--line); padding:.7rem 0; }
+      details + details { margin-top:0; }
+      summary {
+          cursor:pointer; font-weight:600; color:var(--blue);
+          list-style:none; background:var(--soft); padding:.4rem .8rem; border-radius:6px;
+      }
+      summary::-webkit-details-marker { display:none; }
+      summary::before { content:"+"; display:inline-block; width:1.2rem; font-weight:700; }
+      details[open] > summary::before { content:"\2212"; }
+      details p { color:var(--muted); margin-top:.5rem; }
+
+      .note {
+          background:#fef9e3; border-left:4px solid var(--sun);
+          padding:.7rem 1rem; margin:1rem 0; border-radius:4px;
+      }
+      .warn {
+          background:#fdecea; border-left:4px solid var(--warn);
+          padding:.7rem 1rem; margin:1rem 0; border-radius:4px;
+      }
+      .task {
+          background:var(--soft); border-radius:10px; padding:1.2rem 1.5rem;
+          margin:1.5rem 0; border-left:5px solid var(--sun);
+      }
+      .task h3 { margin-top:0; }
+      .intro { color:var(--muted); }
+      footer {
+          margin-top:2rem; padding-top:1rem; border-top:1px solid var(--line);
+          font-size:.9rem; color:var(--muted);
+      }
+      @media (max-width:860px) {
+          .wrap { display:block; padding:1.5rem 1.1rem 4rem; }
+          aside { position:static; margin-bottom:2rem; }
+          aside ol { display:flex; flex-wrap:wrap; gap:.3rem 1.2rem; border-left:0; }
+          aside li a { padding:.2rem 0; border-left:0; margin:0; }
+      body { font-size:16px; }
+      }
+      @media print {
+          aside ol, details > summary::before { display:none; }
+          details { display:block; }
+      }
+  </style>
+</head>
+<body>
+    <div class="wrap">
+        <aside>
+            <p class="title">ИИ на Python</p>
+            <p class="day">Работа с Ollama</p>
+            <ol>
+                <li><a href="#start">Начало работы</a></li>
+                <li><a href="#w1">Работа 1. Базовый помощник</a></li>
+                <li><a href="#w2">Работа 2. Контекстный чат</a></li>
+                <li><a href="#w3">Работа 3. Мультиагентная система</a></li>
+                <li><a href="#tasks">Дополнительные задания</a></li>
+            </ol>
+        </aside>
+
+        <main>
+            <section id="start">
+                <h2>Начало работы с Ollama</h2>
+                <p>В этой работе вы познакомитесь с локальным запуском LLM через Ollama.</p>
+                
+                <div class="note">
+                    <p><strong>Установка:</strong></p>
+                    <pre><code>curl https://ollama.com/install.sh | bash
+ollama init</code></pre>
+                    
+                    <p><strong>Загрузка модели:</strong></p>
+                    <pre><code>ollama pull qwen2:0.5b</code></pre>
+                </div>
+            </section>
+
+            <section id="w1">
+                <span class="n">Работа 1</span>
+                <h2>Создание базового помощника</h2>
+                
+                <h3>Базовый код</h3>
+                <pre><code>import ollama
+
+def ask_model(prompt):
+    response = ollama.chat(
+        model="qwen2:0.5b",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return response["message"]["content"]
+
+if __name__ == "__main__":
+    print("Локальный AI-помощник. Введите 'выход' для завершения")
+    while True:
+        user_input = input("\nВы: ")
+        if user_input.lower() in ("выход", "exit"):
+            break
+        response = ask_model(user_input)
+        print(f"AI: {response}")</code></pre>
+            </section>
+
+            <section id="w2">
+                <span class="n">Работа 2</span>
+                <h2>Контекстный чат-бот</h2>
+                
+                <p><strong>Цель:</strong> создать помощника с сохранением контекста диалога.</p>
+                
+                <pre><code>import ollama
+
+class ContextChat:
+    def __init__(self):
+        self.messages = []
+    
+    def chat(self, user_input):
+        self.messages.append({"role": "user", "content": user_input})
+        response = ollama.chat(
+            model="qwen2:0.5b",
+            messages=self.messages
+        )
+        bot_response = response["message"]["content"]
+        self.messages.append({"role": "assistant", "content": bot_response})
+        return bot_response
+
+if __name__ == "__main__":
+    chat = ContextChat()
+    print("Контекстный AI-помощник. Введите 'выход' для завершения")
+    while True:
+        user_input = input("\nВы: ")
+        if user_input.lower() in ("выход", "exit"):
+            break
+        print(f"AI: {chat.chat(user_input)}")</code></pre>
+            </section>
+
+            <section id="w3">
+                <span class="n">Работа 3</span>
+                <h2>Мультиагентная система</h2>
+                
+                <p><strong>Цель:</strong> создать систему с несколькими агентами, решающими задачу совместно.</p>
+                
+                <pre><code>import ollama
+
+class Agent:
+    def __init__(self, role):
+        self.role = role
+        self.messages = []
+    
+    def think(self, prompt):
+        self.messages.append({"role": "user", "content": f"Ты {self.role}. {prompt}"})
+        response = ollama.chat(
+            model="qwen2:0.5b",
+            messages=self.messages
+        )
+        self.messages.append({"role": "assistant", "content": response["message"]["content"]})
+        return response["message"]["content"]
+
+class MultiAgentSystem:
+    def __init__(self):
+        self.analyst = Agent("аналитик")
+        self.coder = Agent("программист")
+        self.reviewer = Agent("рецензент")
+    
+    def solve_problem(self, problem):
+        # Этап 1: Анализ проблемы
+        analysis = self.analyst.think(problem)
+        
+         # Этап 2: Разработка решения
+        code_solution = self.coder.think(f"На основе анализа создай код решения: {analysis}")
+        
+        # Этап 3: Проверка решения
+        review = self.reviewer.think(f"Проанализируй код и предложи улучшения: {code_solution}")
+        
+        return {
+            "анализ": analysis,
+            "решение": code_solution,
+            "ревью": review
+        }
+
+if __name__ == "__main__":
+    print("Мультиагентная система. Введите 'выход' для завершения")
+    system = MultiAgentSystem()
+    
+    while True:
+        user_input = input("\nВведите задачу: ")
+        if user_input.lower() in ("выход", "exit"):
+            break
+            
+        result = system.solve_problem(user_input)
+        print("\nАнализ проблемы:")
+        print(result["анализ"])
+        print("\nПредложенное решение:")
+        print(result["решение"])
+        print("\nРекомендации по улучшению:")
+        print(result["ревью"])
+</code></pre>
+
+<p><strong>Дополнительные возможности:</strong></p>
+<ul>
+    <li>Добавление новых ролей агентов</li>
+    <li>Сохранение истории диалогов</li>
+    <li>Экспорт результатов в файл</li>
+</ul>
+
+<section id="tasks">
+    <h2>Дополнительные задания</h2>
+
+    <div class="task">
+        <h3>Задание 1</h3>
+        <p>Добавьте систему команд для управления агентами:</p>
+        <ul>
+            <li>/list - список агентов</li>
+            <li>/add - добавление нового агента</li>
+            <li>/remove - удаление агента</li>
+        </ul>
+    </div>
+
+    <div class="task">
+        <h3>Задание 2</h3>
+        <p>Реализуйте сохранение истории диалогов в JSON-файл</p>
+    </div>
+
+    <div class="task">
+        <h3>Задание 3</h3>
+        <p>Создайте графический интерфейс для работы с системой</p>
+    </div>
+</section>
+        </main>
+    </div>
+</body>
+</html>
